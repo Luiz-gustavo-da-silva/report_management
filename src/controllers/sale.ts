@@ -72,9 +72,15 @@ export const getSaleById = async (req: Request, res: Response) => {
 
         res.json(sale);
     } catch (error) {
+
+        if (error instanceof NotFoundException) {
+            throw error;
+        }
+
         throw new NotFoundException("Erro ao buscar a venda", ErrorCode.SALE_NOT_FOUND);
     }
 };
+
 
 export const deleteSale = async (req: Request, res: Response) => {
     try {
