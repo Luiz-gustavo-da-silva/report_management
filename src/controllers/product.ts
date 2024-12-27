@@ -33,8 +33,43 @@ export const updateProduct = async (req: Request, res: Response) => {
 }
 
 export const deleteProduct = async (req: Request, res: Response) => {
-    // precisa verificar se existe um produto no estoque, caso exista, não pode ser deletado
-}
+    try {
+        const productId = +req.params.id;
+
+        const product = await prismaCilent.product.findUnique({
+            where: { id: productId },
+        });
+
+        if (!product) {
+            throw new NotFoundException("Produto não encontrado", ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        const sale = await prismaCilent.sale.findFirst({
+            where: { productId },
+        });
+
+        if (sale) {
+            throw new NotFoundException(
+                "O produto não pode ser deletado. Existe uma venda associada a esse produto!",
+                ErrorCode.PRODUCT_IN_SALE
+            );
+        }
+
+        const deletedProduct = await prismaCilent.product.delete({
+            where: { id: productId },
+        });
+
+        res.json(deletedProduct);
+    } catch (error) {
+        if (error instanceof NotFoundException) {
+            res.status(404).json({ message: error.message, errorCode: error.errorCode });
+        } else {
+            console.error(error);
+            res.status(500).json({ message: "Erro interno no servidor" });
+        }
+    }
+};
+
 
 export const listProduct = async (req: Request, res: Response) => {
 
