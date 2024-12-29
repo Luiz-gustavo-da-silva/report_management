@@ -6,7 +6,7 @@ import { createProduct, deleteProduct, getProductById, listProduct, updateProduc
 const productRoutes: Router = Router()
 
 productRoutes.post('/', [authMiddleware], errorHandler(createProduct));
-productRoutes.put('/:id', [authMiddleware], errorHandler(updateProduct));
+productRoutes.put('/update', [authMiddleware], errorHandler(updateProduct));
 productRoutes.delete('/:id', [authMiddleware], errorHandler(deleteProduct));
 productRoutes.get('/', [authMiddleware], errorHandler(listProduct));
 productRoutes.get('/:id', [authMiddleware], errorHandler(getProductById));

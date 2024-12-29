@@ -20,7 +20,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
         const updatedProduct = await prismaCilent.product.update({
             where:{
-                id: +req.params.id
+                id: +product.id
             },
             data: product
         })
