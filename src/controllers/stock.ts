@@ -95,6 +95,9 @@ export const getStockById = async (req: Request, res: Response) => {
   try {
     const stock = await prismaCilent.stock.findUnique({
       where: { productId: +req.params.id },
+      include: {
+        product: true,
+      },
     });
 
     res.json(stock);
