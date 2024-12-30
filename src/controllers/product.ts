@@ -89,7 +89,7 @@ export const listProduct = async (req: Request, res: Response) => {
 
   if (category) {
     filters.category = {
-      equals: String(category),
+      contains: String(category),
     };
   }
 
