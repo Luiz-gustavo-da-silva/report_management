@@ -4,20 +4,60 @@ import { NotFoundException } from "../exceptions/not-found";
 import { ErrorCode } from "../exceptions/root";
 
 export const listStock = async (req: Request, res: Response) => {
-  const count = await prismaCilent.stock.count();
+  const { name, category, belowQuantity, aboveQuantity } = req.query;
 
-  const stocks = await prismaCilent.stock.findMany({
-    take: 5,
-    skip: +req.query.offset || 0,
-    include: {
-      product: true,
-    },
-  });
+  const filters: any = {};
 
-  res.json({
-    count,
-    data: stocks,
-  });
+  if (name) {
+    filters.product = {
+      name: {
+        contains: String(name),
+      },
+    };
+  }
+
+  if (category) {
+    filters.product = {
+      ...filters.product,
+      category: {
+        equals: String(category),
+      },
+    };
+  }
+
+  if (belowQuantity) {
+    filters.quantity = {
+      lte: Number(belowQuantity),
+    };
+  }
+
+  if (aboveQuantity) {
+    filters.quantity = {
+      ...filters.quantity,
+      gte: Number(aboveQuantity),
+    };
+  }
+
+  try {
+    const count = await prismaCilent.stock.count({
+      where: filters,
+    });
+
+    const stocks = await prismaCilent.stock.findMany({
+      where: filters,
+      include: {
+        product: true,
+      },
+    });
+
+    res.json({
+      count,
+      data: stocks,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar stock." });
+  }
 };
 
 export const addToStock = async (req: Request, res: Response) => {
