@@ -77,17 +77,53 @@ export const deleteProduct = async (req: Request, res: Response) => {
 };
 
 export const listProduct = async (req: Request, res: Response) => {
-  const count = await prismaCilent.product.count();
+  const { name, category, minPrice, maxPrice } = req.query;
 
-  const products = await prismaCilent.product.findMany({
-    take: 5,
-    skip: +req.query.offset || 0,
-  });
+  const filters: any = {};
 
-  res.json({
-    count,
-    data: products,
-  });
+  if (name) {
+    filters.name = {
+      contains: String(name),
+    };
+  }
+
+  if (category) {
+    filters.category = {
+      equals: String(category),
+    };
+  }
+
+  if (minPrice) {
+    filters.price = {
+      ...filters.price,
+      gte: parseFloat(String(minPrice)),
+    };
+  }
+
+  if (maxPrice) {
+    filters.price = {
+      ...filters.price,
+      lte: parseFloat(String(maxPrice)),
+    };
+  }
+
+  try {
+    const count = await prismaCilent.product.count({
+      where: filters,
+    });
+
+    const products = await prismaCilent.product.findMany({
+      where: filters,
+    });
+
+    res.json({
+      count,
+      data: products,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar produtos." });
+  }
 };
 
 export const listProductId = async (req: Request, res: Response) => {
