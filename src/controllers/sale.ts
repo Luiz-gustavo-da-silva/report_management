@@ -48,20 +48,56 @@ export const createSale = async (req: Request, res: Response) => {
 };
 
 export const listSales = async (req: Request, res: Response) => {
-  const count = await prismaCilent.sale.count();
+  const { name, startDate, endDate } = req.query;
 
-  const sales = await prismaCilent.sale.findMany({
-    take: 5,
-    skip: +req.query.offset || 0,
-    include: {
-      product: true,
-    },
-  });
+  const filters: any = {};
 
-  res.json({
-    count,
-    data: sales,
-  });
+  if (name) {
+    filters.product = {
+      name: {
+        contains: String(name),
+      },
+    };
+  }
+
+  if (startDate || endDate) {
+    filters.saleDate = {
+      ...(startDate && { gte: new Date(startDate as string) }),
+      ...(endDate && { lte: new Date(endDate as string) }),
+    };
+  }
+
+  try {
+    const count = await prismaCilent.sale.count({
+      where: filters,
+    });
+
+    const sales = await prismaCilent.sale.findMany({
+      where: filters,
+      include: {
+        product: true,
+      },
+    });
+
+    const totalSales = await prismaCilent.sale.aggregate({
+      where: filters,
+      _sum: {
+        totalPrice: true,
+        quantity: true,
+      },
+    });
+
+    res.json({
+      count,
+      totalSales: totalSales._sum.totalPrice || 0,
+      totalProductsSold: totalSales._sum.quantity || 0,
+      data: sales,
+    });
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao buscar Sales." });
+  }
 };
 
 export const getSaleById = async (req: Request, res: Response) => {
